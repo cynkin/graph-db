@@ -1,0 +1,10 @@
+{
+  "password": "Demo@123",
+  "people": ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Heidi", "Ivan"],
+  "connected": [
+    ["Alice", "Bob"], ["Alice", "Carol"], ["Bob", "Carol"],
+    ["Bob", "Dave"], ["Carol", "Dave"], ["Dave", "Eve"], ["Eve", "Frank"],
+    ["Grace", "Heidi"]
+  ],
+  "requested": [["Ivan", "Alice"]]
+}

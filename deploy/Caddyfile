@@ -1,0 +1,14 @@
+# The domain sits behind Cloudflare's proxy, which handles public HTTPS for visitors.
+# Cloudflare then connects to this server on port 80 (SSL mode "Flexible") or
+# port 443 (SSL mode "Full"), so both are served here. Port 443 uses Caddy's own
+# certificate because Cloudflare's bot protection blocks Let's Encrypt validation.
+http://{$DOMAIN} {
+	encode gzip
+	reverse_proxy app:3000
+}
+
+https://{$DOMAIN} {
+	tls internal
+	encode gzip
+	reverse_proxy app:3000
+}

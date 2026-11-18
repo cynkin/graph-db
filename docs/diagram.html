@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GraphNet — how the network is stored, read and shown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #f6f4ef; }
+  svg { display: block; width: 1440px; height: 1016px; }
+  text { font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; }
+  .mono { font-family: 'Geist Mono', ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1016" viewBox="0 0 1440 1016"
+     role="img" aria-labelledby="gn-model-title gn-model-desc">
+  <title id="gn-model-title">GraphNet data model: SQLite users table joined by UUID to Neo4j User nodes, with 1st, 2nd and 3rd degree rings and the matching network UI</title>
+  <desc id="gn-model-desc">Left, the SQLite users table and the Neo4j User node with its CONNECTED and REQUESTED relationships, joined by the same UUID. Right, Alice at the centre of three rings showing Bob and Carol as 1st degree, Dave as 2nd degree with two mutual connections, Eve as 3rd degree, a pending request from Ivan, and Grace and Heidi as a separate pair with no path to her. Below, the My network screen listing Bob, Dave and Ivan with the same degrees.</desc>
+
+  <defs>
+    <marker id="gn-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#5c5d62"/>
+    </marker>
+    <marker id="gn-arrow-amber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#a3670d"/>
+    </marker>
+  </defs>
+
+  <!-- ground -->
+  <rect width="1440" height="1016" fill="#f6f4ef"/>
+
+  <!-- ============ header ============ -->
+  <text x="48" y="44" class="mono" font-size="10" letter-spacing="0.18em" fill="#6f7076">GRAPH DATABASE &#183; DATA MODEL AND UI</text>
+  <text x="48" y="90" font-size="36" font-weight="600" fill="#1c1c1e">How the network is stored, read and shown</text>
+  <text x="48" y="120" font-size="15" fill="#5c5d62">One UUID joins SQLite and Neo4j. 1st, 2nd and 3rd degree come from graph traversals, not table joins.</text>
+  <line x1="48" y1="140" x2="1392" y2="140" stroke="rgba(28,28,30,0.14)" stroke-width="1"/>
+
+  <!-- ============ zone 01 label ============ -->
+  <text x="48" y="172" class="mono" font-size="10" letter-spacing="0.14em" fill="#6f7076">01 &#183; STORAGE</text>
+  <line x1="48" y1="182" x2="600" y2="182" stroke="rgba(28,28,30,0.10)" stroke-width="1"/>
+
+  <!-- zone 02 label -->
+  <text x="640" y="172" class="mono" font-size="10" letter-spacing="0.14em" fill="#6f7076">02 &#183; THE GRAPH &#183; ALICE&#8217;S VIEW</text>
+  <line x1="640" y1="182" x2="1392" y2="182" stroke="rgba(28,28,30,0.10)" stroke-width="1"/>
+
+  <!-- ============ rings ============ -->
+  <circle cx="1016" cy="412" r="80"  fill="none" stroke="rgba(28,28,30,0.13)" stroke-width="1"/>
+  <circle cx="1016" cy="412" r="150" fill="none" stroke="rgba(28,28,30,0.13)" stroke-width="1"/>
+  <circle cx="1016" cy="412" r="220" fill="none" stroke="rgba(28,28,30,0.13)" stroke-width="1"/>
+
+  <!-- ============ edges (drawn before nodes) ============ -->
+  <line x1="1016" y1="412" x2="1088" y2="376" stroke="rgba(28,28,30,0.22)" stroke-width="1.2"/>
+  <line x1="1016" y1="412" x2="940"  y2="440" stroke="rgba(28,28,30,0.22)" stroke-width="1.2"/>
+  <line x1="1088" y1="376" x2="1016" y2="560" stroke="rgba(28,28,30,0.22)" stroke-width="1.2"/>
+  <line x1="940"  y1="440" x2="1016" y2="560" stroke="rgba(28,28,30,0.22)" stroke-width="1.2"/>
+  <line x1="1016" y1="560" x2="1224" y2="488" stroke="rgba(28,28,30,0.22)" stroke-width="1.2"/>
+  <line x1="786"  y1="270" x2="992"  y2="402" stroke="#a3670d" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#gn-arrow-amber)"/>
+
+  <!-- ============ zone 01: SQLite card ============ -->
+  <g transform="translate(0,44)">
+  <rect x="48" y="200" width="240" height="240" rx="6" fill="#ffffff" stroke="#1c1c1e" stroke-width="1"/>
+  <text x="64" y="234" font-size="18" font-weight="600" fill="#1c1c1e">users</text>
+  <text x="64" y="252" class="mono" font-size="8.5" letter-spacing="0.08em" fill="#6f7076">SQLITE &#183; RELATIONAL</text>
+  <line x1="48" y1="264" x2="288" y2="264" stroke="rgba(28,28,30,0.12)" stroke-width="1"/>
+  <text x="64"  y="292" class="mono" font-size="12.5" fill="#1c1c1e">id</text>
+  <text x="180" y="292" class="mono" font-size="11" fill="#6f7076">TEXT</text>
+  <text x="272" y="292" class="mono" font-size="9" fill="#5c5d62" text-anchor="end">PK</text>
+  <text x="64"  y="322" class="mono" font-size="12.5" fill="#1c1c1e">email</text>
+  <text x="180" y="322" class="mono" font-size="11" fill="#6f7076">TEXT</text>
+  <text x="272" y="322" class="mono" font-size="9" fill="#5c5d62" text-anchor="end">UNIQUE</text>
+  <text x="64"  y="352" class="mono" font-size="12.5" fill="#1c1c1e">password_hash</text>
+  <text x="180" y="352" class="mono" font-size="11" fill="#6f7076">TEXT</text>
+  <text x="64"  y="382" class="mono" font-size="12.5" fill="#1c1c1e">role</text>
+  <text x="180" y="382" class="mono" font-size="11" fill="#6f7076">TEXT</text>
+  <text x="64"  y="412" class="mono" font-size="12.5" fill="#1c1c1e">created_at</text>
+  <text x="180" y="412" class="mono" font-size="11" fill="#6f7076">TEXT</text>
+
+  <!-- ============ link between the two stores ============ -->
+  <rect x="300" y="290" width="56" height="12" fill="#f6f4ef"/>
+  <text x="328" y="300" class="mono" font-size="9" fill="#5c5d62" text-anchor="middle">same UUID</text>
+  <line x1="288" y1="312" x2="360" y2="312" stroke="#5c5d62" stroke-width="1" marker-end="url(#gn-arrow)"/>
+
+  <!-- ============ zone 01: Neo4j card ============ -->
+  <rect x="368" y="200" width="232" height="240" rx="6" fill="#ffffff" stroke="#1c1c1e" stroke-width="1"/>
+  <text x="384" y="234" class="mono" font-size="16" font-weight="600" fill="#1c1c1e">(:User)</text>
+  <text x="384" y="252" class="mono" font-size="8.5" letter-spacing="0.08em" fill="#6f7076">NEO4J &#183; GRAPH</text>
+  <line x1="368" y1="264" x2="600" y2="264" stroke="rgba(28,28,30,0.12)" stroke-width="1"/>
+  <text x="384" y="292" class="mono" font-size="12.5" fill="#1c1c1e">id</text>
+  <text x="584" y="292" class="mono" font-size="10.5" fill="#6f7076" text-anchor="end">string</text>
+  <text x="384" y="322" class="mono" font-size="12.5" fill="#1c1c1e">name</text>
+  <text x="584" y="322" class="mono" font-size="10.5" fill="#6f7076" text-anchor="end">string</text>
+  <text x="384" y="352" class="mono" font-size="12.5" fill="#1c1c1e">createdAt</text>
+  <text x="584" y="352" class="mono" font-size="10.5" fill="#6f7076" text-anchor="end">datetime</text>
+  <line x1="368" y1="370" x2="600" y2="370" stroke="rgba(28,28,30,0.12)" stroke-width="1"/>
+  <text x="384" y="388" class="mono" font-size="8" letter-spacing="0.10em" fill="#6f7076">RELATIONSHIPS</text>
+
+  <line x1="384" y1="408" x2="410" y2="408" stroke="#5c5d62" stroke-width="1.2"/>
+  <text x="420" y="412" class="mono" font-size="10" fill="#1c1c1e">CONNECTED</text>
+  <text x="584" y="412" class="mono" font-size="8.5" fill="#6f7076" text-anchor="end">both ways</text>
+
+  <line x1="384" y1="430" x2="404" y2="430" stroke="#a3670d" stroke-width="1.2" marker-end="url(#gn-arrow-amber)"/>
+  <text x="420" y="434" class="mono" font-size="10" fill="#1c1c1e">REQUESTED</text>
+  <text x="584" y="434" class="mono" font-size="8.5" fill="#6f7076" text-anchor="end">one way</text>
+
+  <text x="48" y="482" font-size="13.5" fill="#5c5d62" font-style="italic">Passwords never leave SQLite. The graph holds names and edges only, and every query is parameterised.</text>
+  </g>
+
+  <!-- ============ zone 02: people ============ -->
+  <!-- Alice (focal) -->
+  <circle cx="1016" cy="412" r="26" fill="#e4f0e9" stroke="#0f6b4f" stroke-width="1.4"/>
+  <text x="1016" y="418" font-size="16" font-weight="600" fill="#0f6b4f" text-anchor="middle">A</text>
+  <rect x="988" y="444" width="56" height="18" fill="#f6f4ef"/>
+  <text x="1016" y="458" font-size="14" font-weight="600" fill="#1c1c1e" text-anchor="middle">Alice</text>
+  <text x="1016" y="476" class="mono" font-size="9" fill="#6f7076" text-anchor="middle">you</text>
+
+  <!-- Bob, 1st -->
+  <circle cx="1088" cy="376" r="20" fill="#ffffff" stroke="#bfb8a7" stroke-width="1"/>
+  <text x="1088" y="382" font-size="13" font-weight="600" fill="#1c1c1e" text-anchor="middle">B</text>
+  <rect x="1058" y="400" width="60" height="18" fill="#f6f4ef"/>
+  <text x="1088" y="414" font-size="13" font-weight="500" fill="#1c1c1e" text-anchor="middle">Bob</text>
+  <rect x="1058" y="418" width="60" height="14" fill="#f6f4ef"/>
+  <text x="1088" y="429" class="mono" font-size="9" fill="#0f6b4f" text-anchor="middle">1st &#183; direct</text>
+
+  <!-- Carol, 1st -->
+  <circle cx="940" cy="440" r="20" fill="#ffffff" stroke="#bfb8a7" stroke-width="1"/>
+  <text x="940" y="446" font-size="13" font-weight="600" fill="#1c1c1e" text-anchor="middle">C</text>
+  <rect x="904" y="464" width="72" height="18" fill="#f6f4ef"/>
+  <text x="940" y="478" font-size="13" font-weight="500" fill="#1c1c1e" text-anchor="middle">Carol</text>
+  <rect x="904" y="482" width="72" height="14" fill="#f6f4ef"/>
+  <text x="940" y="493" class="mono" font-size="9" fill="#0f6b4f" text-anchor="middle">1st &#183; direct</text>
+
+  <!-- Dave, 2nd -->
+  <circle cx="1016" cy="560" r="20" fill="#ffffff" stroke="#bfb8a7" stroke-width="1"/>
+  <text x="1016" y="566" font-size="13" font-weight="600" fill="#1c1c1e" text-anchor="middle">D</text>
+  <rect x="972" y="584" width="88" height="18" fill="#f6f4ef"/>
+  <text x="1016" y="598" font-size="13" font-weight="500" fill="#1c1c1e" text-anchor="middle">Dave</text>
+  <rect x="964" y="602" width="104" height="14" fill="#f6f4ef"/>
+  <text x="1016" y="613" class="mono" font-size="9" fill="#a3670d" text-anchor="middle">2nd &#183; 2 mutual</text>
+
+  <!-- Eve, 3rd -->
+  <circle cx="1224" cy="488" r="20" fill="#ffffff" stroke="#bfb8a7" stroke-width="1"/>
+  <text x="1224" y="494" font-size="13" font-weight="600" fill="#1c1c1e" text-anchor="middle">E</text>
+  <rect x="1196" y="512" width="56" height="18" fill="#f6f4ef"/>
+  <text x="1224" y="526" font-size="13" font-weight="500" fill="#1c1c1e" text-anchor="middle">Eve</text>
+  <rect x="1196" y="530" width="56" height="14" fill="#f6f4ef"/>
+  <text x="1224" y="541" class="mono" font-size="9" fill="#4b5a74" text-anchor="middle">3rd</text>
+
+  <!-- Ivan, outside the rings -->
+  <circle cx="768" cy="260" r="18" fill="#ffffff" stroke="#bfb8a7" stroke-width="1"/>
+  <text x="768" y="266" font-size="12" font-weight="600" fill="#1c1c1e" text-anchor="middle">I</text>
+  <rect x="712" y="284" width="112" height="18" fill="#f6f4ef"/>
+  <text x="768" y="298" font-size="13" font-weight="500" fill="#1c1c1e" text-anchor="middle">Ivan</text>
+  <rect x="700" y="302" width="136" height="14" fill="#f6f4ef"/>
+  <text x="768" y="313" class="mono" font-size="9" fill="#a3670d" text-anchor="middle">sent a request</text>
+
+  <text x="1016" y="646" class="mono" font-size="9.5" fill="#6f7076" text-anchor="middle">each ring is one more hop</text>
+
+  <!-- a group with no path to Alice at all -->
+  <line x1="700" y1="556" x2="764" y2="600" stroke="rgba(28,28,30,0.18)" stroke-width="1.2"/>
+  <circle cx="700" cy="556" r="18" fill="#faf9f6" stroke="rgba(28,28,30,0.28)" stroke-width="1"/>
+  <text x="700" y="561" font-size="12" font-weight="600" fill="#6f7076" text-anchor="middle">G</text>
+  <circle cx="764" cy="600" r="18" fill="#faf9f6" stroke="rgba(28,28,30,0.28)" stroke-width="1"/>
+  <text x="764" y="605" font-size="12" font-weight="600" fill="#6f7076" text-anchor="middle">H</text>
+  <text x="732" y="640" class="mono" font-size="9" fill="#6f7076" text-anchor="middle">Grace &amp; Heidi &#183; no path to you</text>
+
+  <!-- ============ zone 03 label ============ -->
+  <text x="48" y="722" class="mono" font-size="10" letter-spacing="0.14em" fill="#6f7076">03 &#183; THE UI</text>
+  <line x1="48" y1="732" x2="1392" y2="732" stroke="rgba(28,28,30,0.10)" stroke-width="1"/>
+
+  <!-- ============ zone 03: My network card ============ -->
+  <rect x="48" y="756" width="752" height="212" rx="6" fill="#ffffff" stroke="rgba(28,28,30,0.16)" stroke-width="1"/>
+  <text x="72" y="796" font-size="20" font-weight="600" fill="#1c1c1e">My network</text>
+
+  <rect x="560" y="774" width="64" height="24" rx="6" fill="#faf9f6" stroke="rgba(28,28,30,0.10)" stroke-width="1"/>
+  <circle cx="574" cy="786" r="4" fill="#0f6b4f"/>
+  <text x="584" y="790" class="mono" font-size="9.5" fill="#5c5d62">1st 2</text>
+
+  <rect x="632" y="774" width="64" height="24" rx="6" fill="#faf9f6" stroke="rgba(28,28,30,0.10)" stroke-width="1"/>
+  <circle cx="646" cy="786" r="4" fill="#a3670d"/>
+  <text x="656" y="790" class="mono" font-size="9.5" fill="#5c5d62">2nd 1</text>
+
+  <rect x="704" y="774" width="64" height="24" rx="6" fill="#faf9f6" stroke="rgba(28,28,30,0.10)" stroke-width="1"/>
+  <circle cx="718" cy="786" r="4" fill="#4b5a74"/>
+  <text x="728" y="790" class="mono" font-size="9.5" fill="#5c5d62">3rd 1</text>
+
+  <line x1="48" y1="810" x2="800" y2="810" stroke="rgba(28,28,30,0.10)" stroke-width="1"/>
+
+  <!-- row: Bob -->
+  <circle cx="88" cy="842" r="16" fill="#f1efe9" stroke="rgba(28,28,30,0.14)" stroke-width="1"/>
+  <text x="88" y="847" font-size="11" font-weight="600" fill="#33343a" text-anchor="middle">B</text>
+  <text x="116" y="847" font-size="15" font-weight="600" fill="#1c1c1e">Bob</text>
+  <text x="116" y="866" font-size="12" fill="#5c5d62">1st &#183; connected</text>
+  <rect x="664" y="828" width="88" height="28" rx="6" fill="#ffffff" stroke="rgba(28,28,30,0.20)" stroke-width="1"/>
+  <text x="708" y="847" font-size="12" font-weight="500" fill="#1c1c1e" text-anchor="middle">Message</text>
+  <line x1="72" y1="878" x2="776" y2="878" stroke="rgba(28,28,30,0.08)" stroke-width="1"/>
+
+  <!-- row: Dave -->
+  <circle cx="88" cy="890" r="16" fill="#f1efe9" stroke="rgba(28,28,30,0.14)" stroke-width="1"/>
+  <text x="88" y="895" font-size="11" font-weight="600" fill="#33343a" text-anchor="middle">D</text>
+  <text x="116" y="895" font-size="15" font-weight="600" fill="#1c1c1e">Dave</text>
+  <text x="116" y="914" font-size="12" fill="#5c5d62">2nd &#183; 2 mutual</text>
+  <rect x="664" y="876" width="88" height="28" rx="6" fill="#1f1f21"/>
+  <text x="708" y="895" font-size="12" font-weight="500" fill="#ffffff" text-anchor="middle">Connect</text>
+  <line x1="72" y1="926" x2="776" y2="926" stroke="rgba(28,28,30,0.08)" stroke-width="1"/>
+
+  <!-- row: Ivan -->
+  <circle cx="88" cy="938" r="16" fill="#fbf1dc" stroke="rgba(163,103,13,0.35)" stroke-width="1"/>
+  <text x="88" y="943" font-size="11" font-weight="600" fill="#a3670d" text-anchor="middle">I</text>
+  <text x="116" y="943" font-size="15" font-weight="600" fill="#1c1c1e">Ivan</text>
+  <text x="116" y="962" font-size="12" fill="#a3670d">Sent you a request</text>
+  <rect x="664" y="924" width="88" height="28" rx="6" fill="#1f1f21"/>
+  <text x="708" y="943" font-size="12" font-weight="500" fill="#ffffff" text-anchor="middle">Accept</text>
+
+  <!-- ============ zone 03: degree key ============ -->
+  <text x="832" y="762" class="mono" font-size="10" letter-spacing="0.14em" fill="#6f7076">HOW A DEGREE IS COUNTED</text>
+
+  <circle cx="840" cy="800" r="4.5" fill="#0f6b4f"/>
+  <text x="856" y="804" class="mono" font-size="11" font-weight="600" fill="#1c1c1e">1 hop</text>
+  <text x="936" y="804" class="mono" font-size="10.5" fill="#5c5d62">Alice &#8594; Bob</text>
+  <text x="1384" y="804" font-size="13" font-weight="600" fill="#0f6b4f" text-anchor="end">1st</text>
+
+  <circle cx="840" cy="840" r="4.5" fill="#a3670d"/>
+  <text x="856" y="844" class="mono" font-size="11" font-weight="600" fill="#1c1c1e">2 hops</text>
+  <text x="936" y="844" class="mono" font-size="10.5" fill="#5c5d62">Alice &#8594; Bob &#8594; Dave</text>
+  <text x="1384" y="844" font-size="13" font-weight="600" fill="#a3670d" text-anchor="end">2nd</text>
+
+  <circle cx="840" cy="880" r="4.5" fill="#4b5a74"/>
+  <text x="856" y="884" class="mono" font-size="11" font-weight="600" fill="#1c1c1e">3 hops</text>
+  <text x="936" y="884" class="mono" font-size="10.5" fill="#5c5d62">Alice &#8594; Bob &#8594; Dave &#8594; Eve</text>
+  <text x="1384" y="884" font-size="13" font-weight="600" fill="#4b5a74" text-anchor="end">3rd</text>
+
+  <line x1="832" y1="908" x2="1392" y2="908" stroke="rgba(28,28,30,0.10)" stroke-width="1"/>
+  <text x="832" y="934" font-size="12.5" fill="#5c5d62">Mutual = someone you are both connected to. Dave scores 2, through Bob and Carol.</text>
+  <text x="832" y="956" font-size="12.5" fill="#5c5d62">Accepting a request deletes the REQUESTED edge and creates one CONNECTED edge, stored once.</text>
+  <text x="832" y="978" class="mono" font-size="9.5" fill="#6f7076">3 hops is the limit &#183; no path means outside your network</text>
+</svg>
+</body>
+</html>
