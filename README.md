@@ -114,7 +114,8 @@ so you can sign in right away. Every account below is ready to use.
 The admin goes straight to the **Admin** page, which shows:
 
 - the live **Neo4j graph**, which you can explore by dragging nodes around
-- the **SQLite `users` table** (password hashes are hidden)
+- the **SQLite `users` table** (`id`, `email`, `created_at`). It lists the network's members
+  only — the admin account is not a row of it — and password hashes are never shown.
 
 The admin account exists only in SQLite (`role = 'admin'`) and has no `:User` node, so it
 never shows up in anyone's network and can't send or accept connection requests.
@@ -224,7 +225,7 @@ To sign in later, enter the same email. Because it already exists, you'll go str
 - **Degrees:** people are grouped into 1st, 2nd and 3rd degree, with a count of mutual connections.
 - **Profile:** click a name to see your mutual connections with that person. Their full
   connection list is shown only if they are your 1st-degree connection.
-- **Search:** find people by name using the search bar.
+- **Search:** find people by name on the **Discover** page.
 - **My connections:** in the profile menu, shows your own connection list.
 
 See [Login details](#login-details) for accounts to try this with.

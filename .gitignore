@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/design
 /.pnp
 .pnp.*
 .yarn/*
@@ -44,6 +45,13 @@ next-env.d.ts
 
 # local SQLite database
 /data/
+
+# QA screenshots (regenerate with the qa-*.mjs / scripts/*.mjs checks)
+/qa-audit/
+/qa-final/
+/qa-light/
+/qa-redesign/
+/qa-theme/
 
 # editor settings
 .idea/

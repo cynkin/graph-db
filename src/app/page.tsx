@@ -1,10 +1,10 @@
-import {Suspense} from "react";
-import AvailableUsers from "@/components/AvailableUsers";
+import type {Metadata} from "next";
+import DashboardView from "@/components/dashboard/DashboardView";
+
+export const metadata: Metadata = {
+    title: "Overview",
+};
 
 export default function Page() {
-    return (
-        <Suspense fallback={<div className="m-5">Loading...</div>}>
-            <AvailableUsers/>
-        </Suspense>
-    );
+    return <DashboardView/>;
 }

@@ -1,53 +1,39 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type {Metadata} from "next";
+import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
 import Provider from "@/components/SessionProvider";
-import Header from "@/components/UI/Header";
-import Footer from "@/components/UI/Footer";
-import {Poppins} from "next/font/google";
-import ShowHeader from "@/components/UI/ShowHeader";
-import React from "react";
+import AppChrome from "@/components/layout/AppChrome";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
 });
 
-const poppins = Poppins({
-    subsets:["latin"],
-    weight:["400"],
-})
-
 export const metadata: Metadata = {
-  title: "GraphNet",
-  description: "A LinkedIn-style professional network built on a Neo4j graph database",
+    title: {
+        default: "GraphNet",
+        template: "%s · GraphNet",
+    },
+    description: "A professional network whose shape comes from a Neo4j graph: 1st, 2nd and 3rd degree connections, mutuals, and a live graph console.",
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${poppins.className} antialiased xl:px-64 px-4 flex flex-col min-h-screen`}
-      >
-            <Provider>
-                <ShowHeader>
-                    <Header/>
-                </ShowHeader>
-                    <main className="flex-1">
-                        {children}
-                    </main>
-                <Footer/>
-            </Provider>
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body className={`${geistSans.variable} ${geistMono.variable} gn`}>
+                <Provider>
+                    <AppChrome>{children}</AppChrome>
+                </Provider>
+            </body>
+        </html>
+    );
 }

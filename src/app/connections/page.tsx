@@ -1,10 +1,16 @@
+import type {Metadata} from "next";
 import {Suspense} from "react";
-import UserConnections from "@/components/UserConnections";
+import ProfileView from "@/components/profile/ProfileView";
+import {PageLoading} from "@/components/UI/States";
+
+export const metadata: Metadata = {
+    title: "Profile",
+};
 
 export default function ConnectionsPage() {
     return (
-        <Suspense fallback={<div className="m-5">Loading...</div>}>
-            <UserConnections/>
+        <Suspense fallback={<PageLoading label="Loading profile…"/>}>
+            <ProfileView/>
         </Suspense>
     );
 }

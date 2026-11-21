@@ -1,13 +1,12 @@
-'use client';
+"use client";
+
 import {useRouter} from "next/navigation";
 import React, {useEffect, useState} from "react";
 import Link from "next/link";
+import {Check, Dot, Eye, EyeOff} from "lucide-react";
 import AuthFormWrapper from "@/components/Auth/AuthFormWrapper";
 import {useAuthStore} from "@/stores/authStore";
-
-const inputStyle = " mt-6 placeholder:text-[#222] focus:outline-none focus:ring-2 focus:ring-[#5423e7] w-full border py-3.5 px-4 text-lg tracking-wide border-gray-400 rounded-lg"
-const buttonStyle = "w-full transition-all duration-200 tracking-wider rounded-full px-9 py-3.5 text-lg font-semibold mt-2 "
-const listStyle = " px-2.5 text-base";
+import {EMAIL_INVALID_MESSAGE, isValidEmail} from "@/lib/validation";
 
 const getStrength = (pwd: string) => {
     let score = 0;
@@ -18,14 +17,26 @@ const getStrength = (pwd: string) => {
     return score;
 };
 
+const LABELS = ["Too short", "Weak", "Fair", "Strong", "Very strong"];
+
 export default function CreatePasswordPage() {
     const router = useRouter();
-    const [password, setPassword] = useState('');
-    const {formData: {email}, setFormData} = useAuthStore();
+    const [password, setPassword] = useState("");
+    const [show, setShow] = useState(false);
+    const {formData: {email}, setFormData, setEmailError} = useAuthStore();
 
+    // Step 1 is the only place an email error belongs, so a bad stored address goes
+    // back there instead of letting the user set a password for it.
     useEffect(() => {
-        if (!email) router.replace("/auth/login");
-    }, [email, router]);
+        if (!email) {
+            router.replace("/auth/login");
+            return;
+        }
+        if (!isValidEmail(email)) {
+            setEmailError(EMAIL_INVALID_MESSAGE);
+            router.replace("/auth/login");
+        }
+    }, [email, router, setEmailError]);
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -36,45 +47,88 @@ export default function CreatePasswordPage() {
 
     const strength = getStrength(password);
     const canContinue = password.length >= 6 && password.length <= 64 && strength >= 2;
-    const strengthLabel = ['Weak', 'Fair', 'Strong', 'Very Strong'][strength - 1] || 'Weak';
-    const progressColors = ['bg-gray-400', 'bg-yellow-300', 'bg-green-500', 'bg-green-500'];
+    const strengthColor = strength >= 3
+        ? "var(--success)"
+        : strength === 2
+            ? "var(--accent)"
+            : "var(--error)";
+
+    const rules = [
+        {label: "6 to 64 characters", ok: password.length >= 6 && password.length <= 64},
+        {label: "Combines letters and numbers", ok: /[a-zA-Z]/.test(password) && /\d/.test(password)},
+        {label: "One special character ~ # @ $ % & ! * _ ? ^ -", ok: /[\W_]/.test(password)},
+    ];
 
     return (
-        <AuthFormWrapper>
-            <div className="self-start text-3xl tracking-wide font-semibold">Create a password</div>
-            <div className="mt-2 self-start text-lg">
-                New account for {email} <Link href="/auth/login" className="text-sm text-blue-500 ml-2">Change</Link>
-            </div>
+        <AuthFormWrapper step={2}>
+            <h1 className="gn-auth-title">Create a password</h1>
+            <p className="gn-auth-sub">
+                New account for <strong>{email}</strong>.{" "}
+                <Link href="/auth/login" className="gn-auth-textlink">Change email</Link>
+            </p>
 
-            <form onSubmit={handleSubmit} className="w-full" method="post">
-                <input type="password" name="password" autoFocus autoComplete="new-password" maxLength={64}
-                       placeholder="Password" className={inputStyle}
-                       value={password} onChange={(e) => setPassword(e.target.value)}/>
-
-                <div className="flex justify-between text-sm text-gray-600 mt-2 mb-0.5">
-                    <span>Password strength</span>
-                    <span className="font-bold">{strengthLabel}</span>
+            <form onSubmit={handleSubmit} className="gn-auth-body" method="post">
+                <div className="gn-field">
+                    <label className="gn-label" htmlFor="auth-new">Password</label>
+                    <div className="gn-pw-wrap">
+                        <input
+                            id="auth-new"
+                            type={show ? "text" : "password"}
+                            name="password"
+                            autoFocus
+                            autoComplete="new-password"
+                            maxLength={64}
+                            placeholder="6 to 64 characters"
+                            className="gn-input"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <button
+                            type="button"
+                            className="gn-pw-toggle"
+                            onClick={() => setShow((v) => !v)}
+                            aria-label={show ? "Hide password" : "Show password"}
+                            aria-pressed={show}
+                        >
+                            {show ? <EyeOff size={15}/> : <Eye size={15}/>}
+                        </button>
+                    </div>
                 </div>
 
-                <div className="h-2 rounded-full bg-gray-200 overflow-hidden mt-2 mb-5">
-                    <div
-                        className={`h-full transition-all duration-300 ${progressColors[strength - 1] || 'bg-gray-300'}`}
-                        style={{width: `${(strength / 4) * 100}%`}}
-                    />
+                <div>
+                    <div className="gn-flex gn-ic" style={{justifyContent: "space-between"}}>
+                        <span className="gn-hint">Password strength</span>
+                        <span className="gn-tiny" style={{fontWeight: 600, color: strengthColor}}>
+                            {LABELS[strength] ?? "Too short"}
+                        </span>
+                    </div>
+                    <div className="gn-meter" style={{marginTop: 7}}>
+                        <i style={{
+                            width: `${(strength / 4) * 100}%`,
+                            background: strengthColor,
+                        }}/>
+                    </div>
                 </div>
 
-                <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1 mb-6">
-                    {password.length < 6 && <li className={listStyle}>Includes 6-64 characters</li>}
-                    {(!/\d/.test(password) || !/[a-zA-Z]/.test(password)) && <li className={listStyle}>Combines letters and numbers</li>}
-                    {!(/[\W_]/.test(password)) && <li className={listStyle}>A special character ~ # @ $ % & ! * _ ? ^ -</li>}
+                <ul className="gn-check-list">
+                    {rules.map((rule) => (
+                        <li key={rule.label} className={rule.ok ? "is-on" : ""}>
+                            <span className="ck">
+                                {rule.ok ? <Check size={13}/> : <Dot size={13}/>}
+                            </span>
+                            {rule.label}
+                        </li>
+                    ))}
                 </ul>
 
-                <button type="submit" disabled={!canContinue}
-                        className={`${buttonStyle} ${canContinue ?
-                            'bg-[#5423e7] text-white hover:bg-purple-700 cursor-pointer' : 'bg-purple-200 text-white cursor-not-allowed'}`}>
+                <button
+                    type="submit"
+                    disabled={!canContinue}
+                    className="gn-btn gn-btn-primary gn-btn-lg gn-btn-block"
+                >
                     Continue
                 </button>
             </form>
         </AuthFormWrapper>
-    )
+    );
 }
